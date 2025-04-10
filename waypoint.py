@@ -227,7 +227,7 @@ class TimeVaryingWaypoint(sysModel.SysModel):
         super(TimeVaryingWaypoint, self).__init__()
         
         # Initialize configuration parameters (can be modified before simulation starts)
-        self.radius = 800.0  # meters
+        self.radius = 2000.0  # meters
         self.period = 3600.0 / 12  # seconds (1 hour)
         self.waypointModule = None  # Link to the smallBodyWaypointFeedback module
         self.startPosition = [-2000., 0., 0.]  # Initial waypoint position
@@ -316,7 +316,7 @@ class TimeVaryingWaypoint(sysModel.SysModel):
         self.waypointModule.x2_ref = [vx, vy, vz]
         
         # Log waypoint updates periodically (every 1000 seconds)
-        if int(currentTime) % 100 == 0:
+        if int(currentTime) % 10 == 0:
             self.bskLogger.bskLog(
                 sysModel.BSK_INFORMATION, 
                 f"TimeVaryingWaypoint: t={currentTime:.1f}s, position=[{x:.2f}, {y:.2f}, {z:.2f}], velocity=[{vx:.2f}, {vy:.2f}, {vz:.2f}]"
@@ -396,7 +396,7 @@ def run(show_plots):
     gravFactory.addBodiesTo(scObject)
 
     # Create the position and velocity of states of the s/c wrt the small body hill frame origin
-    r_BO_N = np.array([-2000., 1500., 1000.]) # Position of the spacecraft relative to the body
+    r_BO_N = np.array([2000., 0., 0.]) # Position of the spacecraft relative to the body
     v_BO_N = np.array([0., 0., 0.])  # Velocity of the spacecraft relative to the body
 
     # Create the inertial position and velocity of the s/c
@@ -552,7 +552,7 @@ def run(show_plots):
     waypointFeedback.mu_ast = mu  # Gravitational constant of the asteroid
     
     # Initial waypoint values
-    waypointFeedback.x1_ref = [-2000., 0., 0.]
+    waypointFeedback.x1_ref = [2000., 0., 0.]
     waypointFeedback.x2_ref = [0.0, 0.0, 0.0]
 
     # Create the time-varying waypoint module
@@ -561,8 +561,12 @@ def run(show_plots):
     
     # Configure the waypoint parameters - customize these as needed
     timeVaryingWaypoint.radius = 2000.0  # meters 
-    timeVaryingWaypoint.period = 3600.0  # seconds (1 hour)
-    timeVaryingWaypoint.startPosition = [-2000., 0., 0.]  # Initial position
+    
+    # Set the period to exactly match the asteroid's rotation period (for stationary orbit)
+    asteroidRotationPeriod = 12.296057 * 3600.0  # Convert hours to seconds
+    timeVaryingWaypoint.period = asteroidRotationPeriod  # seconds
+    
+    timeVaryingWaypoint.startPosition = [2000., 0., 0.]  # Initial position
     timeVaryingWaypoint.startVelocity = [0.0, 0.0, 0.0]   # Initial velocity
     timeVaryingWaypoint.orbitPlane = 'xy'                # Orbit plane
     
@@ -703,5 +707,5 @@ def run(show_plots):
 #
 if __name__ == "__main__":
     run(
-        True  # show_plots
+        False  # show_plots
     )
