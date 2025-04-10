@@ -240,7 +240,7 @@ def run(show_plots):
     dynProcess = scSim.CreateNewProcess(simProcessName)
 
     # Create the dynamics task and specify the simulation time step information
-    simulationTimeStep = macros.sec2nano(20.0)
+    simulationTimeStep = macros.sec2nano(10.0)
 
     # Add dynamics task to the simulation process
     dynProcess.addTask(scSim.CreateNewTask(simTaskName, simulationTimeStep))
@@ -249,11 +249,11 @@ def run(show_plots):
     gravBodyEphem = planetEphemeris.PlanetEphemeris()
     gravBodyEphem.ModelTag = 'planetEphemeris'
     scSim.AddModelToTask(simTaskName, gravBodyEphem)
-    gravBodyEphem.setPlanetNames(planetEphemeris.StringVector(["bennu"]))
+    gravBodyEphem.setPlanetNames(planetEphemeris.StringVector(["320P/McNaught"]))
 
     # Specify orbital parameters of the asteroid
-    timeInitString = "2038 January 1 0:00:00.0"
-    diam = 2 * 245.03  # m
+    timeInitString = "2036 January 1 0:00:00.0"
+    diam = 2 * 1600  # m
     G = 6.67408 * (10 ** -11)  # m^3 / kg*s^2
     massBennu = 1.34 * (10 ** 11)  # kg
     mu = G * massBennu  # Bennu grav. parameter, m^3/s^2
@@ -270,13 +270,11 @@ def run(show_plots):
     gravBodyEphem.rightAscension = planetEphemeris.DoubleVector([85.65 * macros.D2R])
     gravBodyEphem.declination = planetEphemeris.DoubleVector([-60.17 * macros.D2R])
     gravBodyEphem.lst0 = planetEphemeris.DoubleVector([0.0 * macros.D2R])
-    gravBodyEphem.rotRate = planetEphemeris.DoubleVector([360 * macros.D2R / (4.296057 * 3600.)])  # rad/sec
+    gravBodyEphem.rotRate = planetEphemeris.DoubleVector([360 * macros.D2R / (12.296057 * 3600.)])  # rad/sec
 
     # Set orbital radii about asteroid
     r0 = diam/2.0 + 800  # capture orbit, meters
-    r1 = diam/2.0 + 600  # intermediate orbit, meters
-    r2 = diam/2.0 + 400  # final science orbit, meters
-    r3 = diam/2.0 + 300  # meters, very close fly-by, elliptic orbit
+    r1 = diam/2.0 + 300  # meters, very close fly-by, elliptic orbit
     rP = r0
     rA = 3*rP
 
@@ -284,9 +282,6 @@ def run(show_plots):
     P0 = np.pi*2/np.sqrt(mu/(r0**3))
     P01 = np.pi*2/np.sqrt(mu/(((r0+r1)/2)**3))
     P1 = np.pi*2/np.sqrt(mu/(r1**3))
-    P12 = np.pi*2/np.sqrt(mu/(((r1+r2)/2)**3))
-    P2 = np.pi*2/np.sqrt(mu/(r2**3))
-    P23 = np.pi*2/np.sqrt(mu/(((r2+r3)/2)**3))
 
     # Create additional gravitational bodies
     gravFactory = simIncludeGravBody.gravBodyFactory()
@@ -306,9 +301,9 @@ def run(show_plots):
 
     # Create the asteroid custom gravitational body
     asteroid = gravFactory.createCustomGravObject("320P/McNaught", mu
-                                                   , modelDictionaryKey="asteroid1"
+                                                   , modelDictionaryKey="asteroid2"
                                                   , radEquator=1600. / 2.0
-                                                  , radiusRatio= 0.75
+                                                  , radiusRatio= 0.9
                                                   )
     asteroid.isCentralBody = True  # ensures the asteroid is the central gravitational body
     asteroid.planetBodyInMsg.subscribeTo(gravBodyEphem.planetOutMsgs[0])  # connect asteroid ephem. to custom grav body
@@ -343,7 +338,7 @@ def run(show_plots):
     oe = orbitalMotion.ClassicElements()
     oe.a = (rP + rA)/2.0
     oe.e = 1 - (rP / oe.a)
-    oe.i = 90.0 * macros.D2R
+    oe.i = 5.0 * macros.D2R
     oe.Omega = 180.0 * macros.D2R
     oe.omega = 347.8 * macros.D2R
     oe.f = -45.0 * macros.D2R
@@ -473,7 +468,7 @@ def run(show_plots):
 
         viz.settings.showCelestialBodyLabels = 1
         viz.settings.showSpacecraftLabels = 1
-        viz.settings.truePathFixedFrame = "bennu"
+        viz.settings.truePathFixedFrame = "320P/McNaught"
         viz.settings.trueTrajectoryLinesOn = 5  # relative to celestial body fixed frame
 
         viz.settings.scViewToPlanetViewBoundaryMultiplier = 100
@@ -551,7 +546,7 @@ def run(show_plots):
 
     # Travel in a circular orbit at r0, incorporating several attitude pointing modes
     runDvBurn(burnTime, -1, velAsteroidGuidance.attRefOutMsg)
-    runSensorSciencePointing(P0/3.-burnTime)
+    runSensorSciencePointing(P0)
     runDvBurn(burnTime, -1, velAsteroidGuidance.attRefOutMsg)
 
     # Get access to dynManager translational states for future access to the states
@@ -589,64 +584,13 @@ def run(show_plots):
 
     # Run thruster burn visualization along with attitude pointing modes
     runDvBurn(burnTime, -1, velAsteroidGuidance.attRefOutMsg)
-    runSensorSciencePointing(P1/4-burnTime)
+    runSensorSciencePointing(P1)
     runDvBurn(burnTime, -1, velAsteroidGuidance.attRefOutMsg)
 
     # Retrieve the latest relative position and velocity components
     rN = scRec.r_BN_N[-1] - astRec.PositionVector[-1]
     vN = scRec.v_BN_N[-1] - astRec.VelocityVector[-1]
 
-    # Conduct a second Hohmann transfer from r1 to r2, initial burn
-    rData = np.linalg.norm(rN)
-    vData = np.linalg.norm(vN)
-    at = (rData + r2) * .5
-    v2p = np.sqrt((2 * mu / rData) - (mu / at))
-    vHat = vN / vData
-    vVt = vN + vHat * (v2p - vData)
-    # Update state manager's velocity
-    velRef.setState(vVt)
-
-    # Run thruster burn section with science pointing mode
-    runDvBurn(burnTime, -1, velAsteroidGuidance.attRefOutMsg)
-    runSensorSciencePointing(P12/2-burnTime*2)
-    runDvBurn(burnTime, -1, velAsteroidGuidance.attRefOutMsg)
-
-    # Retrieve the latest relative position and velocity components
-    rN = scRec.r_BN_N[-1] - astRec.PositionVector[-1]
-    vN = scRec.v_BN_N[-1] - astRec.VelocityVector[-1]
-
-    # Conduct the second burn of the second transfer to a cicular orbit at r2
-    rData = np.linalg.norm(rN)
-    vData = np.linalg.norm(vN)
-    v3p = np.sqrt(mu / rData)
-    vHat = vN / vData
-    vVt = vN + vHat * (v3p - vData)
-    # Update state manager's velocity
-    velRef.setState(vVt)
-
-    # Run thruster visualization with science pointing mode
-    runDvBurn(burnTime, -1, velAsteroidGuidance.attRefOutMsg)
-    runSensorSciencePointing(P2-burnTime)
-
-    # Retrieve the latest relative position and velocity components
-    rN = scRec.r_BN_N[-1] - astRec.PositionVector[-1]
-    vN = scRec.v_BN_N[-1] - astRec.VelocityVector[-1]
-
-    # Conduct a third Hohmann transfer from r2 to r3, initial burn
-    rData = np.linalg.norm(rN)
-    vData = np.linalg.norm(vN)
-    at = (rData + r3) * .5
-    v3p = np.sqrt((2 * mu / rData) - (mu / at))
-    vHat = vN / vData
-    vVt = vN + vHat * (v3p - vData)
-    # Update state manager's velocity
-    velRef.setState(vVt)
-
-    # Run thruster visualization with science-pointing mode
-    runDvBurn(burnTime, -1, velAsteroidGuidance.attRefOutMsg)
-    runSensorSciencePointing(3*P23-burnTime)
-
-    # Retrieve logged spacecraft position relative to asteroid
     posData1 = scRec.r_BN_N  # inertial pos. wrt. Sun
     posData2 = scRec.r_BN_N - astRec.PositionVector  # relative pos. wrt. Asteroid
 
@@ -671,33 +615,57 @@ def plotOrbits(timeAxis, posData1, posData2, rP, diam):
     plt.close("all")  # Clears out plots from earlier test runs
     figureList = {}
 
-    # Plot arrival to Asteroid
-    plt.figure(1, figsize=(5, 5))
-    # Draw the planet
-    fig = plt.gcf()
-    ax = fig.gca()
-    ax.set_aspect('equal')
-    ax.ticklabel_format(useOffset=False, style='sci')
-    ax.get_yaxis().set_major_formatter(plt.FuncFormatter(lambda x, loc: "{:,}".format(int(x))))
-    ax.get_xaxis().set_major_formatter(plt.FuncFormatter(lambda x, loc: "{:,}".format(int(x))))
-    planetColor = '#008800'
-    planetRadius = .5*(diam) # m
-    ax.add_artist(plt.Circle((0, 0), planetRadius, color=planetColor))
-
-    # Draw the actual orbit from pulled data (DataRec)
-    plt.plot(posData2[:, 0], posData2[:, 2], color='orangered',
-             label='Simulated Flight')
-    plt.xlabel('X Distance, Inertial [m]')
-    plt.ylabel('Z Distance, Inertial [m]')
-
-    # Draw desired parking orbit
-    fData = np.linspace(0, 2 * np.pi, 100)
-    rData = []
-    for indx in range(0, len(fData)):
-        rData.append(rP)
-    plt.plot(rData* np.cos(fData), rData * np.sin(fData), '--', color='#555555', label='Desired Circ.Capture Orbit')
-    plt.legend(loc='upper right')
-    plt.grid()
+    # Create 3D plot for arrival to Asteroid
+    fig = plt.figure(1, figsize=(8, 6))
+    ax = fig.add_subplot(111, projection='3d')
+    
+    # Draw the asteroid as a sphere
+    planetRadius = 0.5 * diam  # m
+    u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
+    x = planetRadius * np.cos(u) * np.sin(v)
+    y = planetRadius * np.sin(u) * np.sin(v)
+    z = planetRadius * np.cos(v)
+    ax.plot_surface(x, y, z, color='green', alpha=0.3)
+    
+    # Plot the spacecraft trajectory
+    ax.plot(posData2[:, 0], posData2[:, 1], posData2[:, 2], 
+            color='orangered', linewidth=2, label='Simulated Flight')
+    
+    # Draw desired circular capture orbit
+    theta = np.linspace(0, 2 * np.pi, 100)
+    x_orbit = rP * np.cos(theta)
+    y_orbit = rP * np.sin(theta)
+    z_orbit = np.zeros_like(theta)
+    ax.plot(x_orbit, y_orbit, z_orbit, '--', color='#555555', 
+            linewidth=1.5, label='Desired Circ. Capture Orbit')
+    
+    # Set labels and title
+    ax.set_xlabel('X Distance [m]')
+    ax.set_ylabel('Y Distance [m]')
+    ax.set_zlabel('Z Distance [m]')
+    ax.set_title('Spacecraft Orbit around Asteroid')
+    
+    # Equal aspect ratio for all axes
+    max_range = np.array([
+        np.max(posData2[:, 0]) - np.min(posData2[:, 0]),
+        np.max(posData2[:, 1]) - np.min(posData2[:, 1]),
+        np.max(posData2[:, 2]) - np.min(posData2[:, 2])
+    ]).max() / 2.0
+    
+    mid_x = (np.max(posData2[:, 0]) + np.min(posData2[:, 0])) / 2
+    mid_y = (np.max(posData2[:, 1]) + np.min(posData2[:, 1])) / 2
+    mid_z = (np.max(posData2[:, 2]) + np.min(posData2[:, 2])) / 2
+    
+    ax.set_xlim(mid_x - max_range, mid_x + max_range)
+    ax.set_ylim(mid_y - max_range, mid_y + max_range)
+    ax.set_zlim(mid_z - max_range, mid_z + max_range)
+    
+    ax.legend()
+    ax.grid(True)
+    
+    # Set initial view angle
+    ax.view_init(elev=30, azim=45)
+    
     pltName = fileName + "1"
     figureList[pltName] = plt.figure(1)
 
