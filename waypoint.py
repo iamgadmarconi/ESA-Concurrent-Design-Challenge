@@ -420,13 +420,15 @@ def run(show_plots):
     # Create RWs
     rwFactory = simIncludeRW.rwFactory()
 
-    # create each RW by specifying the RW type, the spin axis gsHat, plus optional arguments
-    RW1 = rwFactory.create('Honeywell_HR16', [1, 0, 0], maxMomentum=100., Omega=100.  # RPM
-                           )
-    RW2 = rwFactory.create('Honeywell_HR16', [0, 1, 0], maxMomentum=100., Omega=200.  # RPM
-                           )
-    RW3 = rwFactory.create('Honeywell_HR16', [0, 0, 1], maxMomentum=100., Omega=300.  # RPM
-                           )
+
+    varRWModel = messaging.BalancedWheels
+    c = 2**(-0.5)
+
+    RW1 = rwFactory.create('Honeywell_HR16', [c, 0, c], maxMomentum=100., RWModel=varRWModel, u_max=0.6)
+    RW2 = rwFactory.create('Honeywell_HR16', [0, c, c], maxMomentum=100., RWModel=varRWModel, u_max=0.6)
+    RW3 = rwFactory.create('Honeywell_HR16', [-c, 0, c], maxMomentum=100., RWModel=varRWModel, u_max=0.6)
+    RW4 = rwFactory.create('Honeywell_HR16', [0, -c, c], maxMomentum=100., RWModel=varRWModel, u_max=0.6)
+
 
     # create RW object container and tie to spacecraft object
     rwStateEffector = reactionWheelStateEffector.ReactionWheelStateEffector()
@@ -525,7 +527,7 @@ def run(show_plots):
     mrpFeedbackControl.vehConfigInMsg.subscribeTo(vcConfigMsg)
     mrpFeedbackControl.K = 7.0
     mrpFeedbackControl.Ki = -1
-    mrpFeedbackControl.P = 300.
+    mrpFeedbackControl.P = 30.
     mrpFeedbackControl.integralLimit = 2. / mrpFeedbackControl.Ki * 0.1
 
     # add module that maps the Lr control torque into the RW motor torques
@@ -617,7 +619,7 @@ def run(show_plots):
 
     if vizSupport.vizFound:
         vizInterface = vizSupport.enableUnityVisualization(scSim, simTaskName, scObject
-                                                                , saveFile=fileName
+                                                                , saveFile=fileName, rwEffectorList=rwStateEffector
                                                                 )
         vizSupport.createStandardCamera(vizInterface, setMode=0, bodyTarget='bennu', setView=0)
 
