@@ -416,7 +416,7 @@ def run(show_plots):
 
     # Set the truth ICs for the spacecraft attitude and rate
     scObject.hub.sigma_BNInit = np.array([0.3, 0.7, 0.2])  # rad
-    scObject.hub.omega_BN_BInit = np.array([0.1, 0.1, 0.1])  # rad/s
+    scObject.hub.omega_BN_BInit = np.array([0.0, 0.0, 0.0])  # rad/s
 
     # Create RWs
     rwFactory = simIncludeRW.rwFactory()
