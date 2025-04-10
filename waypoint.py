@@ -73,6 +73,7 @@ from Basilisk.fswAlgorithms import inertial3D
 from Basilisk.fswAlgorithms import mrpFeedback
 from Basilisk.fswAlgorithms import rwMotorTorque
 from Basilisk.fswAlgorithms import smallBodyWaypointFeedback
+from Basilisk.fswAlgorithms import locationPointing
 from Basilisk.simulation import ephemerisConverter
 from Basilisk.simulation import extForceTorque
 from Basilisk.simulation import planetEphemeris
@@ -504,15 +505,27 @@ def run(show_plots):
     # planetNavMeas.PMatrix = p_matrix_p
     # planetNavMeas.walkBounds = walk_bounds_p
 
-    # Inertial pointing
-    inertialPoint = inertial3D.inertial3D()
-    inertialPoint.ModelTag = "inertialPoint"
-    inertialPoint.sigma_R0N = [0.1, 0.0, 0.0]
+    # # Inertial pointing
+    # inertialPoint = inertial3D.inertial3D()
+    # inertialPoint.ModelTag = "inertialPoint"
+    # inertialPoint.sigma_R0N = [0.1, 0.0, 0.0]
+
+    # Set up sensor science-pointing guidance module
+    cameraLocation = [0.0, 1.5, 0.0]
+    sciencePointGuidance = locationPointing.locationPointing()
+    sciencePointGuidance.ModelTag = "sciencePointAsteroid"
+    sciencePointGuidance.celBodyInMsg.subscribeTo(ephemConverter.ephemOutMsgs[0])
+    sciencePointGuidance.scTransInMsg.subscribeTo(simpleNavMeas.transOutMsg)
+    sciencePointGuidance.scAttInMsg.subscribeTo(simpleNavMeas.attOutMsg)
+#    sciencePointGuidance.scTargetInMsg.subscribeTo(sNavObject.transOutMsg)
+    sciencePointGuidance.pHat_B = cameraLocation  # y-axis set for science-pointing sensor
+    sciencePointGuidance.useBoresightRateDamping = 1
+    scSim.AddModelToTask(simTaskName, sciencePointGuidance)
 
     # Attitude error configuration
     trackingError = attTrackingError.attTrackingError()
     trackingError.ModelTag = "trackingError"
-    trackingError.attRefInMsg.subscribeTo(inertialPoint.attRefOutMsg)
+    trackingError.attRefInMsg.subscribeTo(sciencePointGuidance.attRefOutMsg)
 
     # Specify the vehicle configuration message to tell things what the vehicle inertia is
     vehicleConfigOut = messaging.VehicleConfigMsgPayload()
@@ -586,7 +599,6 @@ def run(show_plots):
     scSim.AddModelToTask(simTaskName, ephemConverter, 197)
     scSim.AddModelToTask(simTaskName, simpleNavMeas, 196)
     scSim.AddModelToTask(simTaskName, planetNavMeas, 195)
-    scSim.AddModelToTask(simTaskName, inertialPoint, 108)
     scSim.AddModelToTask(simTaskName, trackingError, 106)
     scSim.AddModelToTask(simTaskName, mrpFeedbackControl, 105)
     scSim.AddModelToTask(simTaskName, extForceTorqueModule, 82)
@@ -709,5 +721,5 @@ def run(show_plots):
 #
 if __name__ == "__main__":
     run(
-        False  # show_plots
+        True  # show_plots
     )
