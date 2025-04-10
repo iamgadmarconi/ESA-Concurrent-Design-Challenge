@@ -358,12 +358,12 @@ def run(show_plots):
     # https://ssd.jpl.nasa.gov/horizons.cgi#results
     # December 31st, 2018
     oeAsteroid = planetEphemeris.ClassicElements()
-    oeAsteroid.a = 1.1259 * astroConstants.AU * 1000  # meters
-    oeAsteroid.e = 0.20373
-    oeAsteroid.i = 6.0343 * macros.D2R
-    oeAsteroid.Omega = 2.01820 * macros.D2R
-    oeAsteroid.omega = 66.304 * macros.D2R
-    oeAsteroid.f = 346.32 * macros.D2R
+    oeAsteroid.a = 3.103 * astroConstants.AU * 1000  # meters
+    oeAsteroid.e = 0.6824
+    oeAsteroid.i = 4.89 * macros.D2R
+    oeAsteroid.Omega = 295.96 * macros.D2R
+    oeAsteroid.omega = 0.67 * macros.D2R
+    oeAsteroid.f = 0.0 * macros.D2R
     r_ON_N, v_ON_N = orbitalMotion.elem2rv(astroConstants.MU_SUN*(1000.**3), oeAsteroid)
 
     # specify celestial object orbit
@@ -540,7 +540,7 @@ def run(show_plots):
     mrpFeedbackControl.vehConfigInMsg.subscribeTo(vcConfigMsg)
     mrpFeedbackControl.K = 7.0
     mrpFeedbackControl.Ki = -1
-    mrpFeedbackControl.P = 30.
+    mrpFeedbackControl.P = 20.
     mrpFeedbackControl.integralLimit = 2. / mrpFeedbackControl.Ki * 0.1
 
     # add module that maps the Lr control torque into the RW motor torques
