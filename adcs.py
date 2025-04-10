@@ -253,7 +253,7 @@ def run(show_plots):
 
     # Specify orbital parameters of the asteroid
     timeInitString = "2036 January 1 0:00:00.0"
-    diam = 2 * 1600  # m
+    diam = 1600  # m
     G = 6.67408 * (10 ** -11)  # m^3 / kg*s^2
     massBennu = 1.34 * (10 ** 11)  # kg
     mu = G * massBennu  # Bennu grav. parameter, m^3/s^2
@@ -273,8 +273,8 @@ def run(show_plots):
     gravBodyEphem.rotRate = planetEphemeris.DoubleVector([360 * macros.D2R / (12.296057 * 3600.)])  # rad/sec
 
     # Set orbital radii about asteroid
-    r0 = diam/2.0 + 800  # capture orbit, meters
-    r1 = diam/2.0 + 300  # meters, very close fly-by, elliptic orbit
+    r0 = diam/2.0 + 400  # capture orbit, meters
+    r1 = diam/2.0 + 100  # meters, very close fly-by, elliptic orbit
     rP = r0
     rA = 3*rP
 
@@ -301,10 +301,10 @@ def run(show_plots):
 
     # Create the asteroid custom gravitational body
     asteroid = gravFactory.createCustomGravObject("320P/McNaught", mu
-                                                   , modelDictionaryKey="asteroid2"
-                                                  , radEquator=1600. / 2.0
-                                                  , radiusRatio= 0.9
-                                                  )
+                                                , modelDictionaryKey="asteroid2"
+                                                , radEquator=1600. / 2.0
+                                                , radiusRatio= 0.9
+                                                )
     asteroid.isCentralBody = True  # ensures the asteroid is the central gravitational body
     asteroid.planetBodyInMsg.subscribeTo(gravBodyEphem.planetOutMsgs[0])  # connect asteroid ephem. to custom grav body
 
