@@ -273,8 +273,8 @@ def run(show_plots):
     gravBodyEphem.rotRate = planetEphemeris.DoubleVector([360 * macros.D2R / (12.296057 * 3600.)])  # rad/sec
 
     # Set orbital radii about asteroid
-    r0 = diam/2.0 + 400  # capture orbit, meters
-    r1 = diam/2.0 + 100  # meters, very close fly-by, elliptic orbit
+    r0 = diam/2.0 + 100  # capture orbit, meters
+    r1 = diam/2.0 + 50  # meters, very close fly-by, elliptic orbit
     rP = r0
     rA = 3*rP
 
