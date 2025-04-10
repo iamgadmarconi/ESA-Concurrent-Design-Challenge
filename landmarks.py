@@ -309,7 +309,7 @@ def run(show_plots, useBatch):
     # https://ssd.jpl.nasa.gov/tools/gravity.html#/vesta
     gravFactory = simIncludeGravBody.gravBodyFactory()
     mu = 4.4631 * 1e5
-    asteroid = gravFactory.createCustomGravObject("eros", mu=mu, radEquator=16*1000, modelDictionaryKey="asteroid2")
+    asteroid = gravFactory.createCustomGravObject("bennu", mu, modelDictionaryKey="asteroid2")
     asteroid.isCentralBody = True
     asteroid.planetBodyInMsg.subscribeTo(gravBodyEphem.planetOutMsgs[0])
 

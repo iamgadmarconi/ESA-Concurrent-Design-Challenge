@@ -341,7 +341,7 @@ def run(show_plots):
     # https://ssd.jpl.nasa.gov/tools/gravity.html#/vesta
     gravFactory = simIncludeGravBody.gravBodyFactory()
     mu = 17.2882449693*1e9 # m^3/s^2
-    asteroid = gravFactory.createCustomGravObject("vesta", mu, radEquator=265*1000)
+    asteroid = gravFactory.createCustomGravObject("vesta", mu, radEquator=265*1000, modelDictionaryKey="asteroid2")
     asteroid.isCentralBody = True
 
     nSpherHarm = 14

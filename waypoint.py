@@ -352,7 +352,7 @@ def run(show_plots):
     # Setup celestial object ephemeris module
     gravBodyEphem = planetEphemeris.PlanetEphemeris()
     gravBodyEphem.ModelTag = 'planetEphemeris'
-    gravBodyEphem.setPlanetNames(planetEphemeris.StringVector(["bennu"]))
+    gravBodyEphem.setPlanetNames(planetEphemeris.StringVector(["320P/McNaught"]))
 
     # specify orbits of gravitational bodies
     # https://ssd.jpl.nasa.gov/horizons.cgi#results
@@ -388,7 +388,7 @@ def run(show_plots):
     sunEphemerisMsg.write(sunEphemerisMsgData)
 
     mu = 4.892  # m^3/s^2
-    asteroid = gravFactory.createCustomGravObject("bennu", mu, modelDictionaryKey="asteroid2")
+    asteroid = gravFactory.createCustomGravObject("320P/McNaught", mu, modelDictionaryKey="asteroid2")
     asteroid.planetBodyInMsg.subscribeTo(gravBodyEphem.planetOutMsgs[0])
 
     # create SC object
@@ -415,7 +415,7 @@ def run(show_plots):
     scObject.hub.IHubPntBc_B = unitTestSupport.np2EigenMatrix3d(I)
 
     # Set the truth ICs for the spacecraft attitude and rate
-    scObject.hub.sigma_BNInit = np.array([0.1, 0.0, 0.0])  # rad
+    scObject.hub.sigma_BNInit = np.array([0.3, 0.7, 0.2])  # rad
     scObject.hub.omega_BN_BInit = np.array([0.1, 0.1, 0.1])  # rad/s
 
     # Create RWs
@@ -425,10 +425,10 @@ def run(show_plots):
     varRWModel = messaging.BalancedWheels
     c = 2**(-0.5)
 
-    RW1 = rwFactory.create('Honeywell_HR16', [c, 0, c], maxMomentum=100., RWModel=varRWModel, u_max=0.6)
-    RW2 = rwFactory.create('Honeywell_HR16', [0, c, c], maxMomentum=100., RWModel=varRWModel, u_max=0.6)
-    RW3 = rwFactory.create('Honeywell_HR16', [-c, 0, c], maxMomentum=100., RWModel=varRWModel, u_max=0.6)
-    RW4 = rwFactory.create('Honeywell_HR16', [0, -c, c], maxMomentum=100., RWModel=varRWModel, u_max=0.6)
+    RW1 = rwFactory.create('Honeywell_HR16', [c, 0, c], maxMomentum=50., RWModel=varRWModel, u_max=0.2)
+    RW2 = rwFactory.create('Honeywell_HR16', [0, c, c], maxMomentum=50., RWModel=varRWModel, u_max=0.2)
+    RW3 = rwFactory.create('Honeywell_HR16', [-c, 0, c], maxMomentum=50., RWModel=varRWModel, u_max=0.2)
+    RW4 = rwFactory.create('Honeywell_HR16', [0, -c, c], maxMomentum=50., RWModel=varRWModel, u_max=0.2)
 
 
     # create RW object container and tie to spacecraft object
@@ -511,7 +511,7 @@ def run(show_plots):
     # inertialPoint.sigma_R0N = [0.1, 0.0, 0.0]
 
     # Set up sensor science-pointing guidance module
-    cameraLocation = [0.0, 1.5, 0.0]
+    cameraLocation = [0.0, 0.0, -1.0]
     sciencePointGuidance = locationPointing.locationPointing()
     sciencePointGuidance.ModelTag = "sciencePointAsteroid"
     sciencePointGuidance.celBodyInMsg.subscribeTo(ephemConverter.ephemOutMsgs[0])
@@ -633,7 +633,12 @@ def run(show_plots):
         vizInterface = vizSupport.enableUnityVisualization(scSim, simTaskName, scObject
                                                                 , saveFile=fileName, rwEffectorList=rwStateEffector
                                                                 )
-        vizSupport.createStandardCamera(vizInterface, setMode=0, bodyTarget='bennu', setView=0)
+
+        vizSupport.createStandardCamera(vizInterface, setMode=1, spacecraftName=scObject.ModelTag,
+                                        fieldOfView=10 * macros.D2R,
+                                        displayName="10˚ FOV Camera",
+                                        pointingVector_B=[0, 0, -1], position_B=cameraLocation)
+
 
         # vizInterface.settings.showSpacecraftLabels = 1
         vizInterface.settings.showCSLabels = 1
