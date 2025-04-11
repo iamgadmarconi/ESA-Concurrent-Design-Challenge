@@ -569,10 +569,51 @@ def run(show_plots=True):
     rate_sigma_sc = 0.05 * math.pi / 180.0
     sun_sigma_sc = 0.0
     dv_sigma_sc = 0.0
+    p_matrix_sc = [[pos_sigma_sc, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+               [0., pos_sigma_sc, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+               [0., 0., pos_sigma_sc, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+               [0., 0., 0., vel_sigma_sc, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+               [0., 0., 0., 0., vel_sigma_sc, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+               [0., 0., 0., 0., 0., vel_sigma_sc, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+               [0., 0., 0., 0., 0., 0., att_sigma_sc, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+               [0., 0., 0., 0., 0., 0., 0., att_sigma_sc, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+               [0., 0., 0., 0., 0., 0., 0., 0., att_sigma_sc, 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+               [0., 0., 0., 0., 0., 0., 0., 0., 0., rate_sigma_sc, 0., 0., 0., 0., 0., 0., 0., 0.],
+               [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., rate_sigma_sc, 0., 0., 0., 0., 0., 0., 0.],
+               [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., rate_sigma_sc, 0., 0., 0., 0., 0., 0.],
+               [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., sun_sigma_sc, 0., 0., 0., 0., 0.],
+               [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., sun_sigma_sc, 0., 0., 0., 0.],
+               [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., sun_sigma_sc, 0., 0., 0.],
+               [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., dv_sigma_sc, 0., 0.],
+               [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., dv_sigma_sc, 0.],
+               [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., dv_sigma_sc]]
+    walk_bounds_sc = [[10.], [10.], [10.], [0.001], [0.001], [0.001], [0.005], [0.005], [0.005], [0.002], [0.002], [0.002], [0.], [0.], [0.], [0.], [0.], [0.]]
+    simpleNavMeas.PMatrix = p_matrix_sc
+    simpleNavMeas.walkBounds = walk_bounds_sc
+
 
     # Set up planetNav for comet "measurements"
     planetNavMeas = planetNav.PlanetNav()
     planetNavMeas.ephemerisInMsg.subscribeTo(ephemConverter.ephemOutMsgs[0])
+    pos_sigma_p = 0.0
+    vel_sigma_p = 0.0
+    att_sigma_p = 2.0 * math.pi / 180.0
+    rate_sigma_p = 0.3 * math.pi / 180.0
+    p_matrix_p = [[pos_sigma_p, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+               [0., pos_sigma_p, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+               [0., 0., pos_sigma_p, 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+               [0., 0., 0., vel_sigma_p, 0., 0., 0., 0., 0., 0., 0., 0.],
+               [0., 0., 0., 0., vel_sigma_p, 0., 0., 0., 0., 0., 0., 0.],
+               [0., 0., 0., 0., 0., vel_sigma_p, 0., 0., 0., 0., 0., 0.],
+               [0., 0., 0., 0., 0., 0., att_sigma_p, 0., 0., 0., 0., 0.],
+               [0., 0., 0., 0., 0., 0., 0., att_sigma_p, 0., 0., 0., 0.],
+               [0., 0., 0., 0., 0., 0., 0., 0., att_sigma_p, 0., 0., 0.],
+               [0., 0., 0., 0., 0., 0., 0., 0., 0., rate_sigma_p, 0., 0.],
+               [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., rate_sigma_p, 0.],
+               [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., rate_sigma_p]]
+    walk_bounds_p = [[0.], [0.], [0.], [0.], [0.], [0.], [0.005], [0.005], [0.005], [0.002], [0.002], [0.002]]
+    planetNavMeas.PMatrix = p_matrix_p
+    planetNavMeas.walkBounds = walk_bounds_p
 
     # Set up sensor science-pointing guidance module
     cameraLocation = [0.0, 0.0, -1.0]
@@ -847,8 +888,8 @@ def run(show_plots=True):
     plot_velocity(times, np.array(v_BO_O_truth), np.array(v_BO_O_meas))
     figureList['velocity'] = plt.figure(3)
 
-    # plot_control(times, np.array(u_requested))
-    # figureList['control'] = plt.figure(4)
+    plot_control(times, np.array(u_requested))
+    figureList['control'] = plt.figure(4)
 
     # plot_sc_att(times, np.array(sigma_BN_truth), np.array(sigma_BN_meas))
     # figureList['attitude'] = plt.figure(5)
