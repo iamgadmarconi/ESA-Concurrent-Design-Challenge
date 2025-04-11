@@ -222,6 +222,65 @@ def plot_control(time, u):
     return
 
 
+# Define a thrust limiter module
+class ThrustLimiter(sysModel.SysModel):
+    def __init__(self):
+        super(ThrustLimiter, self).__init__()
+        
+        # Initialize configuration parameters
+        self.maxThrustPerAxis = 2.0  # N, default max thrust per axis
+        
+        # Declare message interfaces but don't instantiate them directly
+        self.forceInMsg = messaging.CmdForceBodyMsgReader()
+        self.forceOutMsg = messaging.CmdForceBodyMsg()
+        
+    def Reset(self, CurrentSimNanos):
+        """
+        Reset method initializes the thrust limiter
+        :param CurrentSimNanos: current simulation time in nano-seconds
+        :return: none
+        """
+        # Nothing needs to be initialized here, we'll just pass through messages initially
+        # But create a zero message to start with
+        forceOutData = messaging.CmdForceBodyMsgPayload()
+        forceOutData.forceRequestBody = [0.0, 0.0, 0.0]
+        self.forceOutMsg.write(forceOutData, CurrentSimNanos, self.moduleID)
+        
+        self.bskLogger.bskLog(
+            sysModel.BSK_INFORMATION, 
+            f"ThrustLimiter: Reset with max thrust of {self.maxThrustPerAxis} N per axis"
+        )
+        
+    def UpdateState(self, CurrentSimNanos):
+        """
+        UpdateState method limits the thrust command to the maximum allowed value
+        :param CurrentSimNanos: current simulation time in nano-seconds
+        :return: none
+        """
+        # Read the input force command
+        if self.forceInMsg.isLinked():
+            forceIn = self.forceInMsg().forceRequestBody  # Use () instead of .read()
+            
+            # Apply thrust limits to each axis
+            limitedForce = [
+                max(-self.maxThrustPerAxis, min(self.maxThrustPerAxis, forceIn[0])),
+                max(-self.maxThrustPerAxis, min(self.maxThrustPerAxis, forceIn[1])),
+                max(-self.maxThrustPerAxis, min(self.maxThrustPerAxis, forceIn[2]))
+            ]
+            
+            # Create the output message with the limited force
+            forceOutData = messaging.CmdForceBodyMsgPayload()
+            forceOutData.forceRequestBody = limitedForce
+            self.forceOutMsg.write(forceOutData, CurrentSimNanos, self.moduleID)
+            
+            # Log if the thrust was limited (periodically to avoid spam)
+            if (CurrentSimNanos % (int(1e9) * 10)) < int(1e9):  # Log roughly every 10 seconds
+                if any(abs(f_in) > self.maxThrustPerAxis for f_in in forceIn):
+                    self.bskLogger.bskLog(
+                        sysModel.BSK_INFORMATION, 
+                        f"ThrustLimiter: Limited thrust from [{forceIn[0]:.2f}, {forceIn[1]:.2f}, {forceIn[2]:.2f}] to [{limitedForce[0]:.2f}, {limitedForce[1]:.2f}, {limitedForce[2]:.2f}] N"
+                    )
+
 # Define a custom waypoint updater module
 class TimeVaryingWaypoint(sysModel.SysModel):
     def __init__(self):
@@ -588,8 +647,16 @@ def run(show_plots):
     # Link the waypoint module to the updater
     timeVaryingWaypoint.waypointModule = waypointFeedback
 
+    # Create the thrust limiter module
+    thrustLimiter = ThrustLimiter()
+    thrustLimiter.ModelTag = "thrustLimiter"
+    thrustLimiter.maxThrustPerAxis = 2.0  # N, max thrust per axis
+    
+    # Connect the limiter between the waypoint feedback and extForceTorque
+    thrustLimiter.forceInMsg.subscribeTo(waypointFeedback.forceOutMsg)
+
     extForceTorqueModule = extForceTorque.ExtForceTorque()
-    extForceTorqueModule.cmdForceBodyInMsg.subscribeTo(waypointFeedback.forceOutMsg)
+    extForceTorqueModule.cmdForceBodyInMsg.subscribeTo(thrustLimiter.forceOutMsg)
     scObject.addDynamicEffector(extForceTorqueModule)
 
     scSim.AddModelToTask(simTaskName, scObject, 200)
@@ -605,6 +672,10 @@ def run(show_plots):
     scSim.AddModelToTask(simTaskName, rwMotorTorqueObj, 81)
     scSim.AddModelToTask(simTaskName, waypointFeedback, 78)
     
+    # Add the thrust limiter module to the task
+    # Make sure this executes after the waypoint feedback but before extForceTorque
+    scSim.AddModelToTask(simTaskName, thrustLimiter, 80)
+    
     # Add the time-varying waypoint module to the task
     # Make sure this executes before the waypoint feedback for proper sequence
     scSim.AddModelToTask(simTaskName, timeVaryingWaypoint, 79)
@@ -617,6 +688,7 @@ def run(show_plots):
     sc_meas_recorder = simpleNavMeas.transOutMsg.recorder()
     sc_att_meas_recorder = simpleNavMeas.attOutMsg.recorder()
     requested_control_recorder = waypointFeedback.forceOutMsg.recorder()
+    limited_control_recorder = thrustLimiter.forceOutMsg.recorder()
     attitude_error_recorder = trackingError.attGuidOutMsg.recorder()
     scSim.AddModelToTask(simTaskName, sc_truth_recorder)
     scSim.AddModelToTask(simTaskName, ast_truth_recorder)
@@ -625,6 +697,7 @@ def run(show_plots):
     scSim.AddModelToTask(simTaskName, ast_ephemeris_recorder)
     scSim.AddModelToTask(simTaskName, ast_ephemeris_meas_recorder)
     scSim.AddModelToTask(simTaskName, requested_control_recorder)
+    scSim.AddModelToTask(simTaskName, limited_control_recorder)
     scSim.AddModelToTask(simTaskName, attitude_error_recorder)
 
     fileName = 'scenarioSmallBodyFeedbackControl'
@@ -667,6 +740,7 @@ def run(show_plots):
     r_AN_N = ast_truth_recorder.PositionVector
     v_AN_N = ast_truth_recorder.VelocityVector
     u_requested = requested_control_recorder.forceRequestBody
+    u_limited = limited_control_recorder.forceRequestBody
 
     # Compute the relative position and velocity of the s/c in the small body hill frame
     r_BO_O_truth = []
@@ -699,7 +773,7 @@ def run(show_plots):
     pltName = fileName + "2"
     figureList[pltName] = plt.figure(2)
 
-    plot_control(time, np.array(u_requested))
+    plot_control(time, np.array(u_limited))
     pltName = fileName + "3"
     figureList[pltName] = plt.figure(3)
 
