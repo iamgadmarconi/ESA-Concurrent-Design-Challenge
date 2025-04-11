@@ -597,7 +597,7 @@ def run(show_plots=True):
     planetNavMeas.ephemerisInMsg.subscribeTo(ephemConverter.ephemOutMsgs[0])
     pos_sigma_p = 0.0
     vel_sigma_p = 0.0
-    att_sigma_p = 2.0 * math.pi / 180.0
+    att_sigma_p = 1.0 * math.pi / 180.0
     rate_sigma_p = 0.3 * math.pi / 180.0
     p_matrix_p = [[pos_sigma_p, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
                [0., pos_sigma_p, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
@@ -777,29 +777,29 @@ def run(show_plots=True):
         if whichPhase == "APPROACH" or whichPhase == "DEPARTURE":
             # Lower gains during approach/departure for smoother motion
             waypointFeedback.K1 = unitTestSupport.np2EigenMatrix3d(1 * np.array([5e-4, 0e-5, 0e-5, 
-                                                             0e-5, 5e-4, 0e-5, 
-                                                             0e-5, 0e-5, 5e-4]))
-                                                         
+                                                                                0e-5, 5e-4, 0e-5, 
+                                                                                0e-5, 0e-5, 5e-4]))
+
             waypointFeedback.K2 = unitTestSupport.np2EigenMatrix3d(1 * np.array([1., 0., 0.,
-                                                             0., 1., 0., 
-                                                             0., 0., 1.]))
+                                                                                0., 1., 0., 
+                                                                                0., 0., 1.]))
         elif whichPhase == "HOVER":
             # Higher position gain during hover for better position holding
-            waypointFeedback.K1 = unitTestSupport.np2EigenMatrix3d(1 * np.array([5e-4, 0e-5, 0e-5, 
-                                                             0e-5, 5e-4, 0e-5, 
-                                                             0e-5, 0e-5, 5e-4]))
-                                                         
-            waypointFeedback.K2 = unitTestSupport.np2EigenMatrix3d(1 * np.array([1., 0., 0.,
-                                                             0., 1., 0., 
-                                                             0., 0., 1.]))
+            waypointFeedback.K1 = unitTestSupport.np2EigenMatrix3d(2 * np.array([5e-4, 0e-5, 0e-5, 
+                                                                                0e-5, 5e-4, 0e-5, 
+                                                                                0e-5, 0e-5, 5e-4]))
+
+            waypointFeedback.K2 = unitTestSupport.np2EigenMatrix3d(10 * np.array([1., 0., 0.,
+                                                                                0., 1., 0., 
+                                                                                0., 0., 1.]))
         else:  # Default/ORBIT
             waypointFeedback.K1 = unitTestSupport.np2EigenMatrix3d(1 * np.array([5e-4, 0e-5, 0e-5, 
-                                                             0e-5, 5e-4, 0e-5, 
-                                                             0e-5, 0e-5, 5e-4]))
-                                                         
+                                                                                0e-5, 5e-4, 0e-5, 
+                                                                                0e-5, 0e-5, 5e-4]))
+
             waypointFeedback.K2 = unitTestSupport.np2EigenMatrix3d(1 * np.array([1., 0., 0.,
-                                                             0., 1., 0., 
-                                                             0., 0., 1.]))
+                                                                                0., 1., 0., 
+                                                                                0., 0., 1.]))
     
     # Set the initial gains
     updateControllerGains("ORBIT")
