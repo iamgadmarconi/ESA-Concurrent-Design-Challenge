@@ -340,7 +340,7 @@ def run(show_plots):
 
     # Create a sim module as an empty container
     scSim = SimulationBaseClass.SimBaseClass()
-    simulationTime_1 = macros.sec2nano(15000.0)
+    simulationTime_1 = macros.sec2nano(30000.0)  # Increased from 15000 to 30000 seconds
 
     # Create the simulation process
     dynProcess = scSim.CreateNewProcess(simProcessName)
@@ -397,8 +397,8 @@ def run(show_plots):
     gravFactory.addBodiesTo(scObject)
 
     # Create the position and velocity of states of the s/c wrt the small body hill frame origin
-    r_BO_N = np.array([2000., 0., 0.]) # Position of the spacecraft relative to the body
-    v_BO_N = np.array([0., 0., 0.])  # Velocity of the spacecraft relative to the body
+    r_BO_N = np.array([20000., 0., 0.]) # Position of the spacecraft relative to the body (20km)
+    v_BO_N = np.array([-0.5, 0., 0.])  # Initial velocity towards the comet (0.5 m/s)
 
     # Create the inertial position and velocity of the s/c
     r_BN_N = np.add(r_BO_N, r_ON_N)
@@ -581,7 +581,7 @@ def run(show_plots):
     asteroidRotationPeriod = 12.296057 * 3600.0  # Convert hours to seconds
     timeVaryingWaypoint.period = asteroidRotationPeriod  # seconds
     
-    timeVaryingWaypoint.startPosition = [2000., 0., 0.]  # Initial position
+    timeVaryingWaypoint.startPosition = [2000., 0., 0.]  # Target position at 2km
     timeVaryingWaypoint.startVelocity = [0.0, 0.0, 0.0]   # Initial velocity
     timeVaryingWaypoint.orbitPlane = 'xy'                # Orbit plane
     
@@ -648,8 +648,8 @@ def run(show_plots):
     # initialize Simulation
     scSim.InitializeSimulation()
 
-    waypointFeedback.K1 = unitTestSupport.np2EigenMatrix3d([5e-4, 0e-5, 0e-5, 0e-5, 5e-4, 0e-5, 0e-5, 0e-5, 5e-4])
-    waypointFeedback.K2 = unitTestSupport.np2EigenMatrix3d([1., 0., 0., 0., 1., 0., 0., 0., 1.])
+    waypointFeedback.K1 = unitTestSupport.np2EigenMatrix3d([8e-4, 0e-5, 0e-5, 0e-5, 8e-4, 0e-5, 0e-5, 0e-5, 8e-4])
+    waypointFeedback.K2 = unitTestSupport.np2EigenMatrix3d([1.5, 0., 0., 0., 1.5, 0., 0., 0., 1.5])
 
     # configure a simulation stop time and execute the simulation run
     scSim.ConfigureStopTime(simulationTime_1)

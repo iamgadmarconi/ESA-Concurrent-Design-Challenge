@@ -563,12 +563,12 @@ def run(show_plots=True):
     simpleNavMeas = simpleNav.SimpleNav()
     simpleNavMeas.ModelTag = 'SimpleNav'
     simpleNavMeas.scStateInMsg.subscribeTo(scObject.scStateOutMsg)
-    pos_sigma_sc = 30.0
-    vel_sigma_sc = 0.01
-    att_sigma_sc = 0.1 * math.pi / 180.0
-    rate_sigma_sc = 0.05 * math.pi / 180.0
-    sun_sigma_sc = 0.0
-    dv_sigma_sc = 0.0
+    pos_sigma_sc = 30.0       # Position accuracy (m) - less critical for pure ADCS
+    vel_sigma_sc = 0.     # Velocity accuracy (m/s)
+    att_sigma_sc = 0.0   # Attitude knowledge accuracy (rad) - ~0.0023° from star tracker spec
+    rate_sigma_sc = 0.0  # Angular rate knowledge accuracy (rad/s) - from Astrix-120's 5e-4°/hr
+    sun_sigma_sc = 0.0003    # Sun vector knowledge accuracy - from fine sun sensor 0.01-0.05° spec
+    dv_sigma_sc = 0.00005     # Delta-v accuracy (m/s)
     p_matrix_sc = [[pos_sigma_sc, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
                [0., pos_sigma_sc, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
                [0., 0., pos_sigma_sc, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
@@ -587,7 +587,7 @@ def run(show_plots=True):
                [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., dv_sigma_sc, 0., 0.],
                [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., dv_sigma_sc, 0.],
                [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., dv_sigma_sc]]
-    walk_bounds_sc = [[10.], [10.], [10.], [0.001], [0.001], [0.001], [0.005], [0.005], [0.005], [0.002], [0.002], [0.002], [0.], [0.], [0.], [0.], [0.], [0.]]
+    walk_bounds_sc = [[10.], [10.], [10.], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0], [0.], [0.], [0.], [0.], [0.], [0.]]
     simpleNavMeas.PMatrix = p_matrix_sc
     simpleNavMeas.walkBounds = walk_bounds_sc
 
@@ -597,7 +597,7 @@ def run(show_plots=True):
     planetNavMeas.ephemerisInMsg.subscribeTo(ephemConverter.ephemOutMsgs[0])
     pos_sigma_p = 0.0
     vel_sigma_p = 0.0
-    att_sigma_p = 1.0 * math.pi / 180.0
+    att_sigma_p = 0.1 * math.pi / 180.0
     rate_sigma_p = 0.3 * math.pi / 180.0
     p_matrix_p = [[pos_sigma_p, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
                [0., pos_sigma_p, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
@@ -642,8 +642,8 @@ def run(show_plots=True):
     mrpFeedbackControl.ModelTag = "mrpFeedbackControl"
     mrpFeedbackControl.guidInMsg.subscribeTo(trackingError.attGuidOutMsg)
     mrpFeedbackControl.vehConfigInMsg.subscribeTo(vcConfigMsg)
-    mrpFeedbackControl.K = 7.0
-    mrpFeedbackControl.Ki = -1
+    mrpFeedbackControl.K = 10.0
+    mrpFeedbackControl.Ki = 0.001
     mrpFeedbackControl.P = 20.
     mrpFeedbackControl.integralLimit = 2. / mrpFeedbackControl.Ki * 0.1
 
@@ -891,11 +891,11 @@ def run(show_plots=True):
     plot_control(times, np.array(u_requested))
     figureList['control'] = plt.figure(4)
 
-    # plot_sc_att(times, np.array(sigma_BN_truth), np.array(sigma_BN_meas))
-    # figureList['attitude'] = plt.figure(5)
+    plot_sc_att(times, np.array(sigma_BN_truth), np.array(sigma_BN_meas))
+    figureList['attitude'] = plt.figure(5)
 
-    # plot_sc_rate(times, np.array(omega_BN_B_truth), np.array(omega_BN_B_meas))
-    # figureList['rate'] = plt.figure(6)
+    plot_sc_rate(times, np.array(omega_BN_B_truth), np.array(omega_BN_B_meas))
+    figureList['rate'] = plt.figure(6)
 
     if show_plots:
         plt.show()
