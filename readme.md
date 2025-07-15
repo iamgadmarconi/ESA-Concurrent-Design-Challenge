@@ -27,10 +27,10 @@ reuse its proven control logic with almost no extra complexity.
 ## Results
 
 Satellite approaching and matching the velocity of the comet.
-![Satellite approaching and matching the velocity of the comet](results/match-velocity.mp4)
+![Satellite approaching and matching the velocity of the comet](results/match-velocity.gif)
 
 Satellite performing a TAG manoeuvre.
-![Satellite performing a TAG manoeuvre](results/approach-hover-departure.mp4)
+![Satellite performing a TAG manoeuvre](results/approach-hover-departure.gif)
 
 
 ## Customising the scenario
