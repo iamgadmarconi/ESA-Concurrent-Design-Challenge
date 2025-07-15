@@ -24,6 +24,15 @@ While not altering any Basilisk internals, the generator simply refreshes the
 reference message that `smallBodyWaypointFeedback` already consumes, letting us
 reuse its proven control logic with almost no extra complexity.
 
+## Results
+
+Satellite approaching and matching the velocity of the comet.
+![Satellite approaching and matching the velocity of the comet](results/match-velocity.mp4)
+
+Satellite performing a TAG manoeuvre.
+![Satellite performing a TAG manoeuvre](results/approach-hover-departure.mp4)
+
+
 ## Customising the scenario
 
 Edit the parameters at the bottom of `algorithm.py`, for example:
