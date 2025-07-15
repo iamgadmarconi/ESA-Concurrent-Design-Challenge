@@ -1,4 +1,0 @@
-   cd $HOME\ESA-ComMoDE_v1.0\bin
-   .\ComMoDE-env\Scripts\activate
-   cd ..\gui
-   python ComMoDE-gui.py

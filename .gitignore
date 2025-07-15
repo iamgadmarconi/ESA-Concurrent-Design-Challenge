@@ -1,5 +1,11 @@
 _VizFiles/
-commode/
-commode_actiate.txt
-Results.pdf
-Recording 2025-04-10 160914.mp4
+Videos/
+_pycache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.pywz
+*.pyzw
